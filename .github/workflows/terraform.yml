@@ -2,8 +2,6 @@ name: Terraform Azure DevSecOps CI/CD
 
 on:
   push:
-    branches:
-      - '**'
   pull_request:
     branches:
       - main
@@ -31,6 +29,8 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
 
       - name: Terraform Format Check
         run: terraform fmt -check -recursive ../..
@@ -62,7 +62,7 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'config'
-          scan-dir: '.'
+          scan-dir: 'azure_landing_zone/dev'
           exit-code: '0'
 
   # ==========================================
@@ -88,6 +88,8 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
 
       - name: Azure Login
         uses: azure/login@v2
@@ -105,7 +107,7 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan -no-color -out=tfplan
+        run: terraform plan -out=tfplan
 
       - name: Save Plan Artifact
         uses: actions/upload-artifact@v4
@@ -119,7 +121,7 @@ jobs:
   terraform_apply:
     name: "Stage 3: Manual Approval & Apply"
     needs: terraform_plan
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     environment: production
     defaults:
@@ -138,6 +140,8 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
 
       - name: Download Plan Artifact
         uses: actions/download-artifact@v4
@@ -161,4 +165,3 @@ jobs:
 
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
-

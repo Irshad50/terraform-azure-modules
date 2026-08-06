@@ -1,10 +1,10 @@
 name: Terraform Azure DevSecOps CI/CD
 
 on:
-  pull_request:
-    branches:
-      - main
   push:
+    branches:
+      - '**'
+  pull_request:
     branches:
       - main
   workflow_dispatch:

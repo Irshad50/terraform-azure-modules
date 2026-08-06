@@ -6,3 +6,6 @@ variable "bastions" {}
 variable "nsg" {}
 variable "nic" {}
 variable "vm" {}
+variable "key_vaults" {}
+variable "lb" {}
+variable "lb_nic_associations" {}

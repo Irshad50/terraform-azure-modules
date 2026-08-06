@@ -1,5 +1,5 @@
 variable "vm" {
-  
+
 }
 variable "password" {
   type      = string

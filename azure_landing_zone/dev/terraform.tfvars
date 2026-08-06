@@ -100,12 +100,6 @@ nic = {
     resource_group_name = "rg_dev"
     subnet_key          = "subnet2"
   }
-  nic3 = {
-    name                = "prod_nic2"
-    location            = "centralindia"
-    resource_group_name = "rg_dev"
-    subnet_key          = "subnet3"
-  }
 }
 
 vm = {

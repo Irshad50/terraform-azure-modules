@@ -8,7 +8,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
 
   size                            = each.value.size
   admin_username                  = each.value.adminuser
-  admin_password                  = each.value.password
+  admin_password                  = var.password
   disable_password_authentication = false
 
   network_interface_ids = [each.value.nic_id]

@@ -9,6 +9,7 @@ resource "azurerm_public_ip" "pip" {
   location = each.value.location
 
   allocation_method = "Static"
+  sku               = "Standard"
 }
 output "public_ip_id" {
   value = {

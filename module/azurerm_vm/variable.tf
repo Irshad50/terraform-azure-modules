@@ -1,7 +1,10 @@
 variable "vm" {
-
+  type        = map(any)
+  description = "Virtual Machine map"
 }
+
 variable "password" {
-  type      = string
-  sensitive = true # Ye zaroori hai taaki console output mein password na dikhe
+  type        = string
+  sensitive   = true
+  description = "VM Admin Password"
 }

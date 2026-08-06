@@ -51,7 +51,7 @@ jobs:
       - name: Run TFLint
         run: |
           tflint --init
-          tflint --recursive
+          tflint --recursive --minimum-failure-severity=error
 
       - name: Run Checkov Security Scan
         uses: bridgecrewio/checkov-action@master

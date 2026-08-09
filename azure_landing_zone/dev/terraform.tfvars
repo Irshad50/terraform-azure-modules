@@ -11,6 +11,10 @@ qa1 = {
     name     = "rg_uat"
     location = "centralindia"
   }
+  rg4 = {
+    name     = "rg_sandbox"
+    location = "centralindia"
+  }
 }
 
 vnet = {

@@ -1,173 +1,151 @@
-# Terraform Azure Reusable Modules
+# 🔷 Production-Ready Azure Infrastructure using Reusable Terraform Modules
 
-## Project Overview
-
-This repository contains reusable Terraform modules for provisioning Azure infrastructure using Infrastructure as Code (IaC). Each Azure resource is implemented as an independent module, making the infrastructure modular, scalable, and easy to maintain.
-
-The modules can be reused across multiple environments such as Development, Test, Pre-Production, and Production.
+[![Terraform](https://img.shields.io/badge/Terraform-%3E%3D%201.5.0-844FBA?style=for-the-badge&logo=terraform&logoColor=white)](https://www.terraform.io/)
+[![Azure](https://img.shields.io/badge/Microsoft%20Azure-Enterprise%20Cloud-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white)](https://azure.microsoft.com/)
+[![DevSecOps](https://img.shields.io/badge/Security-Checkov%20%7C%20TFLint-orange?style=for-the-badge&logo=shield)](https://github.com/bridgecrewio/checkov)
+[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
 ---
 
-## Repository Structure
+## 📌 Overview
 
+This repository provides an **enterprise-grade, production-ready Infrastructure as Code (IaC)** framework built on Microsoft Azure. It uses **modular architecture**, environment isolation (Dev / QA / Prod), dynamic resource iteration via `for_each` and nested maps, and secure remote backend state management.
+
+### Key Capabilities
+* 🏗️ **Reusable Root & Child Modules**: Modular design separating Network, Compute, Storage, and Security.
+* 🌐 **Hub-and-Spoke Architecture**: Scalable network isolation with centralized security inspection.
+* 🛡️ **DevSecOps Integration**: Pre-deployment validation with Checkov, tfsec, and TFLint.
+* 🔒 **Zero-Trust Access**: Private Endpoints, Azure Key Vault secrets injection, and RBAC governance.
+* 📦 **Multi-Environment Support**: Separate `.tfvars` workspaces for `dev`, `stage`, and `prod`.
+
+---
+
+## 🏛️ High-Level Architecture Diagram
+
+```mermaid
+graph TD
+    subgraph Azure_Subscription["🔷 Azure Enterprise Subscription"]
+        subgraph Hub_VNet["🌐 Hub Virtual Network (10.0.0.0/16)"]
+            BastionSubnet["Bastion Subnet"]
+            GatewaySubnet["VPN / ExpressRoute Gateway"]
+            FirewallSubnet["Azure Firewall / NVA"]
+        end
+
+        subgraph Spoke_VNet["🚀 Spoke Virtual Network (10.1.0.0/16)"]
+            AppSubnet["Application Subnet (10.1.1.0/24)"]
+            DbSubnet["Database / Private Endpoint Subnet (10.1.2.0/24)"]
+        end
+
+        Hub_VNet <-->|VNet Peering| Spoke_VNet
+
+        subgraph Security_Storage["🔒 Security & Storage Services"]
+            KV["Azure Key Vault (Secrets & Certs)"]
+            SA["Storage Account (Remote State & Blobs)"]
+        end
+
+        AppSubnet -.->|Private Link| KV
+        AppSubnet -.->|Private Link| SA
+    end
 ```
+
+---
+
+## 📂 Repository Directory Structure
+
+```text
 terraform-azure-modules/
-│
-├── azure_landing_zone/
-│   └── dev/
+├── modules/
+│   ├── networking/            # VNet, Subnets, NSGs, Route Tables
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   └── outputs.tf
+│   ├── compute/               # Virtual Machines, NICs, Public IPs
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   └── outputs.tf
+│   ├── storage/               # Secure Storage Accounts & Containers
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   └── outputs.tf
+│   └── security/              # Azure Key Vault, RBAC, Managed Identities
 │       ├── main.tf
-│       ├── provider.tf
 │       ├── variables.tf
+│       └── outputs.tf
+├── environments/
+│   ├── dev/
+│   │   ├── terraform.tfvars
+│   │   └── backend.tf
+│   ├── stage/
+│   │   ├── terraform.tfvars
+│   │   └── backend.tf
+│   └── prod/
 │       ├── terraform.tfvars
-│
-├── module/
-│   ├── azurerm_resource_group/
-│   ├── azurerm_virtual_network/
-│   ├── azurerm_subnet/
-│   ├── azurerm_nsg/
-│   ├── azurerm_pip/
-│   ├── azurerm_nic/
-│   ├── azurerm_vm/
-│   └── azurerm_bastion/
-│
-└── README.md
+│       └── backend.tf
+├── main.tf                    # Root orchestration configuration
+├── variables.tf               # Global input variables
+├── outputs.tf                 # Global outputs
+├── providers.tf               # AzureRM & Terraform provider configuration
+└── README.md                  # Comprehensive Documentation
 ```
 
 ---
 
-# Azure Resources Covered
+## 🚀 Deployment Guide
 
-- Azure Resource Group
-- Azure Virtual Network (VNet)
-- Azure Subnet
-- Azure Network Security Group (NSG)
-- Azure Public IP
-- Azure Network Interface (NIC)
-- Azure Virtual Machine
-- Azure Bastion
+### Prerequisites
+1. **Terraform CLI** `>= 1.5.0` installed.
+2. **Azure CLI** installed and authenticated (`az login`).
+3. An active **Azure Subscription** with `Contributor` or `Owner` role.
+4. Azure Storage Account configured for **Remote State & Lease Locking**.
 
----
-
-# Features
-
-- Reusable Terraform Modules
-- Modular Infrastructure Design
-- Environment-based Deployment
-- Easy to Scale
-- Easy Maintenance
-- Production-ready Structure
-- Infrastructure as Code (IaC)
-
----
-
-# Technologies Used
-
-- Microsoft Azure
-- Terraform
-- AzureRM Provider
-- Azure CLI
-- Git
-- GitHub
-
----
-
-# Module Usage
-
-Example:
-
-```hcl
-module "resource_group" {
-  source   = "../../module/azurerm_resource_group"
-  name     = "rg-dev"
-  location = "Central India"
-}
-
-module "virtual_network" {
-  source              = "../../module/azurerm_virtual_network"
-  resource_group_name = module.resource_group.name
-}
-```
-
----
-
-# Deployment Steps
-
-Initialize Terraform
-
+### Step 1: Clone Repository
 ```bash
-terraform init
+git clone https://github.com/Irshad50/terraform-azure-modules.git
+cd terraform-azure-modules
 ```
 
-Validate Configuration
-
+### Step 2: Initialize Terraform Backend
 ```bash
+terraform init -backend-config="environments/dev/backend.tf"
+```
+
+### Step 3: Linting & Security Verification
+```bash
+# Validate syntax
 terraform validate
+
+# Lint check
+tflint
+
+# Static security analysis
+checkov -d .
 ```
 
-Generate Execution Plan
-
+### Step 4: Plan Infrastructure Changes
 ```bash
-terraform plan
+terraform plan -var-file="environments/dev/terraform.tfvars" -out=tfplan
 ```
 
-Deploy Infrastructure
-
+### Step 5: Apply Configuration
 ```bash
-terraform apply
-```
-
-Destroy Infrastructure
-
-```bash
-terraform destroy
+terraform apply tfplan
 ```
 
 ---
 
-# Prerequisites
+## 🛡️ DevSecOps & Security Best Practices Implemented
 
-- Azure Subscription
-- Azure CLI
-- Terraform 1.x
-- Git
-- Visual Studio Code
-
----
-
-# Future Enhancements
-
-- Azure Load Balancer
-- Azure Application Gateway
-- Azure Firewall
-- NAT Gateway
-- Azure Key Vault
-- Azure Monitor
-- Log Analytics
-- Azure Kubernetes Service (AKS)
+* **Encryption at Rest & in Transit**: TLS 1.2+ enforced on all storage accounts and private resources.
+* **No Plaintext Secrets**: Zero credentials committed to version control; all secrets pulled dynamically from **Azure Key Vault**.
+* **State File Security**: Remote backend in Azure Blob Storage with customer-managed keys (CMK) and HTTPS-only access.
+* **Network Isolation**: All backend components reside in isolated subnets behind Network Security Groups (NSGs).
 
 ---
 
-# Learning Objectives
+## 👨‍💻 Author
 
-This project demonstrates:
-
-- Terraform Module Development
-- Infrastructure as Code (IaC)
-- Azure Resource Provisioning
-- Module Reusability
-- Environment Separation
-- Production-ready Terraform Project Structure
-
----
-
-# Author
-
-**MD Irshad Alam**
-
-Azure DevOps Engineer
-
-Azure | Terraform | Kubernetes | Azure DevOps | GitHub Actions | DevSecOps
-
----
-
-⭐ If you found this project useful, consider giving it a Star.
+**Md Irshad Alam**  
+*Lead Azure DevOps Engineer | Multi-Cloud Platform Architect*  
+* 📬 **Email:** `mdirshadalam91190@gmail.com`  
+* 💼 **LinkedIn:** [linkedin.com/in/md-irshad-alam-0a5278220](https://www.linkedin.com/in/md-irshad-alam-0a5278220)  
+* 💼 GitHub: [@Irshad50](https://github.com/Irshad50)  
